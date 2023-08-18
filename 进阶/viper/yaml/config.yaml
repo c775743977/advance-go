@@ -1,0 +1,14 @@
+listenon:
+    host: localhost
+    port: 8080
+mysql:
+    database: testdb
+    host: 127.0.0.1
+    password: Chen@123
+    port: 3306
+    user: root
+redis:
+    addrs:
+        - 192.168.108.165:6381
+        - 192.168.108.165:6382
+        - 192.168.108.165:6383

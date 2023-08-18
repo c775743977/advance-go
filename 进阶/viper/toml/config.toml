@@ -1,0 +1,11 @@
+# this is a toml 
+
+title = "toml exaples"
+redis = "127.0.0.1:3300"  # redis
+
+[mysql]
+host = "localhost"
+port = 3306
+username = "root"
+password = "Chen@123"
+database = "testdb"

@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package pbfile;
+
+option go_package = "./pbfile";
+
+message HelloRequest {
+    string name = 1;
+}
+
+message HelloResponse {
+    int64 age = 1;
+}
+
+service HelloService {
+    rpc SayHello(HelloRequest) returns(HelloResponse);
+}
