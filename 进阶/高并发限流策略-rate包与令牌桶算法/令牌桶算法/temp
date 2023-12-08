@@ -1,0 +1,87 @@
+package main
+
+import (
+	"fmt"
+	"time"
+    "sync"
+)
+
+// 令牌桶结构
+type TokenBucket struct {
+    // 添加令牌的频率
+    Ticker *time.Ticker
+    // 最大令牌数
+    MaxToken int
+    // 管道模拟存放令牌的桶
+    Token chan time.Time
+    // 通知令牌桶停止的管道
+    closeChan chan struct{}
+}
+
+func NewTokenBucket(maxToken int, rate time.Duration) *TokenBucket {
+    // 初始化桶为满状态
+    ch := make(chan time.Time, maxToken)
+    for i := 0; i < maxToken; i++ {
+        ch <- time.Now()
+    }
+
+    tb := &TokenBucket{
+        Ticker: time.NewTicker(rate),
+        MaxToken: maxToken,
+        Token: ch,
+        closeChan: make(chan struct{}),
+    }
+
+    // 开启 goroutine 持续添加令牌
+    go tb.AddToken()
+
+    return tb
+}
+
+func(this *TokenBucket) AddToken() {
+    defer close(this.Token)
+    defer this.Ticker.Stop()
+    for {
+        select {
+        // 添加令牌
+        case t := <- this.Ticker.C:
+            if len(this.Token) != this.MaxToken {
+                this.Token <- t
+            }
+        // 超时处理
+        case <- this.closeChan:
+            fmt.Println("令牌桶停止工作")
+            return
+        }   
+    }
+}
+
+// 获取令牌
+func(this *TokenBucket) GetToken() {
+    <- this.Token
+}
+
+// 停止令牌桶
+func(this *TokenBucket) Stop() {
+    this.closeChan <- struct{}{}
+}
+
+func main() {
+    wg := sync.WaitGroup{}
+    // 创建令牌桶
+    t := NewTokenBucket(10, 200 * time.Millisecond)
+    defer t.Stop()
+    // 进行测试
+    for i := 0; i < 100; i++ {
+        t.GetToken()
+        wg.Add(1)
+        go func(i int) {
+            defer wg.Done()
+            time.Sleep(100 * time.Millisecond)
+            fmt.Printf("任务%d: 获得令牌！\n", i)
+        }(i)
+    }
+
+    // 等待 goroutine 执行完成
+    wg.Wait()
+}
